@@ -46,6 +46,7 @@ pip install transformers accelerate pillow grpcio grpcio-tools numpy
 
 # Install LeRobot
 pip install -e .
+pip install num2words
 
 # Authenticate with Hugging Face (for SmolVLA model access)
 huggingface-cli login
