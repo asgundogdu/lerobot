@@ -1,0 +1,29 @@
+// robotics.proto
+syntax = "proto3";
+
+package robotics;
+
+service SmolVLAService {
+    rpc PredictAction(ObservationRequest) returns (ActionResponse);
+    rpc HealthCheck(HealthRequest) returns (HealthResponse);
+}
+
+message ObservationRequest {
+    bytes camera_data = 1;           // Compressed image data
+    repeated float robot_state = 2;  // Joint positions, velocities, etc.
+    string task_instruction = 3;     // Natural language task
+    int64 timestamp = 4;             // For latency calculation
+}
+
+message ActionResponse {
+    repeated float actions = 1;      // Robot action commands
+    bool success = 2;
+    float latency_ms = 3;
+    string error_message = 4;
+}
+
+message HealthRequest {}
+message HealthResponse {
+    bool healthy = 1;
+    string status = 2;
+}
