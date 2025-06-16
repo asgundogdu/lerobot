@@ -15,6 +15,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass, field
+import json
 
 from lerobot.common import (
     policies,  # noqa: F401
@@ -29,7 +30,7 @@ class DatasetConfig:
     # keys common between the datasets are kept. Each dataset gets and additional transform that inserts the
     # "dataset_index" into the returned item. The index mapping is made according to the order in which the
     # datasets are provided.
-    repo_id: str
+    repo_id: str | list[str]
     # Root directory where the dataset will be stored (e.g. 'dataset/path').
     root: str | None = None
     episodes: list[int] | None = None
@@ -37,6 +38,38 @@ class DatasetConfig:
     revision: str | None = None
     use_imagenet_stats: bool = True
     video_backend: str = field(default_factory=get_safe_default_codec)
+
+    def __post_init__(self):
+        # Handle JSON string parsing for repo_id when passed from command line
+        if isinstance(self.repo_id, str) and self.repo_id.startswith('[') and self.repo_id.endswith(']'):
+            try:
+                # First try parsing as-is (in case it has proper double quotes)
+                parsed_repo_id = json.loads(self.repo_id)
+                if isinstance(parsed_repo_id, list):
+                    self.repo_id = parsed_repo_id
+                    return
+            except json.JSONDecodeError:
+                pass
+            
+            try:
+                # If that fails, try replacing single quotes with double quotes
+                json_str = self.repo_id.replace("'", '"')
+                parsed_repo_id = json.loads(json_str)
+                if isinstance(parsed_repo_id, list):
+                    self.repo_id = parsed_repo_id
+                    return
+            except json.JSONDecodeError:
+                pass
+            
+            # If JSON parsing fails, try using ast.literal_eval as fallback
+            try:
+                import ast
+                parsed_repo_id = ast.literal_eval(self.repo_id)
+                if isinstance(parsed_repo_id, list):
+                    self.repo_id = parsed_repo_id
+            except (ValueError, SyntaxError):
+                # If all parsing fails, keep it as a string (might be a valid single repo_id)
+                pass
 
 
 @dataclass

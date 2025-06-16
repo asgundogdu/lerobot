@@ -17,6 +17,7 @@ import logging
 import time
 from contextlib import nullcontext
 from pprint import pformat
+from copy import deepcopy
 from typing import Any
 
 import torch
@@ -111,7 +112,9 @@ def train(cfg: TrainPipelineConfig):
     logging.info(pformat(cfg.to_dict()))
 
     if cfg.wandb.enable and cfg.wandb.project:
-        wandb_logger = WandBLogger(cfg)
+        temp_cfg = deepcopy(cfg)
+        temp_cfg.dataset.repo_id = temp_cfg.dataset.repo_id[0]
+        wandb_logger = WandBLogger(temp_cfg)
     else:
         wandb_logger = None
         logging.info(colored("Logs will be saved locally.", "yellow", attrs=["bold"]))
@@ -136,9 +139,15 @@ def train(cfg: TrainPipelineConfig):
         eval_env = make_env(cfg.env, n_envs=cfg.eval.batch_size, use_async_envs=cfg.eval.use_async_envs)
 
     logging.info("Creating policy")
+    # Handle both LeRobotDataset and MultiLeRobotDataset for ds_meta
+    if hasattr(dataset, 'meta'):
+        ds_meta = dataset.meta
+    else:  # MultiLeRobotDataset
+        ds_meta = dataset._datasets[1].meta # TODO(asgund): fix this hack
+        
     policy = make_policy(
         cfg=cfg.policy,
-        ds_meta=dataset.meta,
+        ds_meta=ds_meta,
     )
 
     logging.info("Creating optimizer and scheduler")

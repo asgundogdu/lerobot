@@ -46,6 +46,8 @@ class TrainPipelineConfig(HubMixin):
     # Note that when resuming a run, the default behavior is to use the configuration from the checkpoint,
     # regardless of what's provided with the training command at the time of resumption.
     resume: bool = False
+    # Set `overwrite` to true to overwrite an existing output directory
+    overwrite: bool = False
     # `seed` is used for training (eg: model initialization, dataset shuffling)
     # AND for the evaluation environments.
     seed: int | None = 1000
@@ -98,17 +100,15 @@ class TrainPipelineConfig(HubMixin):
                 self.job_name = f"{self.env.type}_{self.policy.type}"
 
         if not self.resume and isinstance(self.output_dir, Path) and self.output_dir.is_dir():
-            raise FileExistsError(
-                f"Output directory {self.output_dir} already exists and resume is {self.resume}. "
-                f"Please change your output directory so that {self.output_dir} is not overwritten."
-            )
+            if not self.overwrite:
+                raise FileExistsError(
+                    f"Output directory {self.output_dir} already exists and resume is {self.resume}. "
+                    f"Please change your output directory, set --overwrite=true, or set --resume=true."
+                )
         elif not self.output_dir:
             now = dt.datetime.now()
             train_dir = f"{now:%Y-%m-%d}/{now:%H-%M-%S}_{self.job_name}"
             self.output_dir = Path("outputs/train") / train_dir
-
-        if isinstance(self.dataset.repo_id, list):
-            raise NotImplementedError("LeRobotMultiDataset is not currently implemented.")
 
         if not self.use_policy_training_preset and (self.optimizer is None or self.scheduler is None):
             raise ValueError("Optimizer and Scheduler must be set when the policy presets are not used.")
