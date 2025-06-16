@@ -1,0 +1,39 @@
+# Requirements for SmolVLA GPU Server on macOS with MLX
+# Install with: pip install -r requirements_macos_mlx.txt
+
+# Core ML frameworks
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+mlx>=0.15.0
+
+# gRPC for server communication
+grpcio>=1.50.0
+grpcio-tools>=1.50.0
+
+# Image processing
+Pillow>=9.0.0
+opencv-python>=4.7.0
+
+# Numerical computing
+numpy>=1.21.0
+scipy>=1.9.0
+
+# ML utilities
+transformers>=4.30.0
+safetensors>=0.3.0
+huggingface-hub>=0.15.0
+
+# Async and utilities
+asyncio
+aiofiles
+tqdm
+
+# Optional: For additional MLX functionality
+# mlx-lm  # For language model support
+# mlx-whisper  # For speech recognition
+
+# Development tools (optional)
+pytest>=7.0.0
+black>=22.0.0
+isort>=5.10.0 
